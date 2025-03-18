@@ -1,0 +1,40 @@
+-- in this script, we are going to work on creating, altering and Deleting an EVENT. EVENTS are used for changing the data at specific time automatically.
+
+SHOW VARIABLES LIKE 'event%';
+
+SELECT *
+FROM customer_orders
+ORDER BY order_date;
+
+-- in this event, we want to delete the older customer order before 5 years every 30 seconds.
+DELIMITER $$
+CREATE EVENT delete_old_customer_orders
+ON SCHEDULE EVERY 30 SECOND
+DO
+BEGIN
+DELETE FROM customer_orders
+WHERE order_date < NOW() - INTERVAL 5 YEAR;
+END $$
+DELIMITER ;
+
+SHOW EVENTS;
+
+
+SELECT *
+FROM customer_orders
+ORDER BY order_date;
+
+-- In this code, we alter the event to 30 day instead of 30 second.
+DELIMITER $$
+ALTER EVENT delete_old_customer_orders
+ON SCHEDULE EVERY 30 DAY
+DO
+BEGIN
+DELETE FROM customer_orders
+WHERE order_date < NOW() - INTERVAL 5 YEAR;
+END $$
+DELIMITER ;
+
+SHOW EVENTS;
+-- and, in this one, we delete the event.
+DROP EVENT delete_old_customer_orders;
