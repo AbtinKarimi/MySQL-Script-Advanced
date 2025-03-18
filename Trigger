@@ -1,0 +1,39 @@
+# trigger and event
+
+SELECT *
+FROM client_invoices;
+
+SELECT *
+FROM client_payments;
+
+# Creating TRIGEER for updating or deleting.
+-- in this code, we creates a trigeer in which update the invoice table if new payment paid in payment table.
+DELIMITER $$
+
+CREATE TRIGGER update_invoice_after_payment
+	AFTER INSERT ON client_payments
+    FOR EACH ROW
+BEGIN
+	UPDATE client_invoices
+    SET total_paid = total_paid + NEW.amount_paid
+    WHERE invoice_id = NEW.invoice_id;
+END $$
+DELIMITER ;
+
+INSERT INTO client_payments
+VALUES (11, 1001, 3, '2022-10-3', 1003.87);
+
+
+-- in this trigger, we want to update the invoice table if deleting happens in payment table.
+
+DELIMITER $$
+
+CREATE TRIGGER update_invoice_after_deleting
+	AFTER DELETE ON client_payments
+    FOR EACH ROW
+BEGIN
+	UPDATE client_invoices
+    SET total_paid = total_paid - OLD.amount_paid
+    WHERE invoice_id = OLD.invoice_id;
+END $$
+DELIMITER ;
