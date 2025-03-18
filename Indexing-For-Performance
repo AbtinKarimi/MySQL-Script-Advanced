@@ -1,0 +1,70 @@
+-- Indexing for performance
+
+SELECT * FROM us_household_income.ushouseholdincome;
+
+SELECT * 
+FROM ushouseholdincome
+WHERE Area_Code = 203;
+
+EXPLAIN SELECT * 
+FROM ushouseholdincome
+WHERE Area_Code = 203;
+
+CREATE INDEX idx_area_code 
+ON ushouseholdincome (Area_Code);
+
+SHOW INDEXES IN ushouseholdincome;
+
+EXPLAIN SELECT * 
+FROM ushouseholdincome
+WHERE Area_Code = 203;
+
+-- prefix indexes (Indexing on text, varchar, etc)
+
+EXPLAIN SELECT *
+FROM ushouseholdincome
+WHERE State_Name  = 'Rhode Island';
+
+CREATE INDEX idx_state_name
+ON ushouseholdincome (State_Name (8));
+
+SHOW INDEXES IN ushouseholdincome;
+
+CREATE INDEX idx_state_name1
+ON ushouseholdincome (State_Name (13));
+
+-- Composite Indexes
+
+EXPLAIN SELECT *
+FROM ushouseholdincome
+WHERE State_Name = 'Rhode Island'
+AND ALand > 10000000;
+
+CREATE INDEX idx_state_Alnad
+ON ushouseholdincome (State_Name (8), Aland);
+
+SHOW INDEXES IN ushouseholdincome;
+
+
+-- Indexing based on the cardinality, order of column matters. high cardinlity better to come first.
+SELECT *
+FROM ushouseholdincome
+WHERE State_ab = 'NC'
+AND City LIKE ('A%');
+
+
+EXPLAIN SELECT *
+FROM ushouseholdincome
+WHERE State_ab = 'NC'
+AND City LIKE ('A%');
+
+SELECT COUNT(DISTINCT (City)), COUNT(DISTINCT(State_ab))
+FROM ushouseholdincome;
+
+CREATE INDEX idx_city_stateab
+ON ushouseholdincome (City(10), State_ab(2));
+
+SHOW INDEXES IN ushouseholdincome;
+
+CREATE INDEX idx_stateab_city
+ON ushouseholdincome (State_ab(2), City(10));
