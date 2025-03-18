@@ -1,0 +1,20 @@
+# Creating Temporary Tables
+
+CREATE TEMPORARY TABLE Example1
+(
+first_name VARCHAR(50),
+last_name VARCHAR(50),
+Movie VARCHAR(100)
+);
+
+SELECT *
+FROM Example1;
+
+CREATE TEMPORARY TABLE Example2
+(SELECT * FROM employees
+WHERE salary > 50000)
+;
+
+SELECT *
+FROM Example2;
+
