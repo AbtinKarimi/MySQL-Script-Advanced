@@ -1,0 +1,189 @@
+# Stored Procedure
+
+SELECT *
+FROM customer_orders
+WHERE order_total > 20
+;
+
+CREATE PROCEDURE large_order_total()
+SELECT *
+FROM customer_orders
+WHERE order_total > 20
+;
+CALL large_order_total();
+
+DELIMITER $$
+CREATE PROCEDURE large_order_total1()
+BEGIN
+	SELECT *
+	FROM customer_orders
+	WHERE order_total > 20;
+	SELECT *
+	FROM customer_orders
+	WHERE order_total > 10;
+END $$
+
+DELIMITER ;
+
+
+CALL large_order_total1();
+
+
+DROP PROCEDURE IF EXISTS order_by_product
+DELIMITER $$
+CREATE PROCEDURE order_by_product(p_product_id INT)
+BEGIN
+	SELECT *
+	FROM customer_orders
+    WHERE product_id = p_product_id;
+END $$
+
+CALL order_by_product(1001);
+
+
+DROP PROCEDURE IF EXISTS order_by_product1
+DELIMITER $$
+CREATE PROCEDURE order_by_product1(p_product_id INT, p_order_date DATE)
+BEGIN
+	SELECT *
+	FROM customer_orders
+    WHERE product_id = p_product_id
+    AND order_date = p_order_date;
+END $$
+
+CALL order_by_product(1001);
+
+CALL order_by_product1(1001, '2020-01-30');
+
+# Default value as Input parameters
+# if the NULL is used as a input parameter, we can set a designated value instead of NULL
+
+DROP PROCEDURE IF EXISTS order_by_Product2
+DELIMITER $$
+CREATE PROCEDURE order_by_product2(p_product_id INT)
+BEGIN
+	IF p_product_id IS NULL
+	THEN SET p_product_id = 1001;
+	END IF;
+	SELECT *
+	FROM customer_orders
+	WHERE product_id = p_product_id;
+END $$
+DELIMITER ;
+
+CALL order_by_product2(1001);
+
+CALL order_by_product2(NULL);
+
+CALL order_by_product2(1003);
+
+# NOW, in this one, we want to give back the whole table if NULL is used as passing parameter.
+
+DROP PROCEDURE IF EXISTS order_by_Product3
+DELIMITER $$
+CREATE PROCEDURE order_by_product3(p_product_id INT)
+BEGIN
+	IF p_product_id IS NULL
+		THEN SELECT *
+		FROM customer_orders;
+	ELSE
+		SELECT *
+		FROM customer_orders
+		WHERE product_id = p_product_id;
+    END IF;
+END $$
+DELIMITER ;
+
+CALL order_by_product3(1001);
+
+CALL order_by_product3(NULL);
+
+CALL order_by_product3(1003);
+
+
+# the other way that is common is using IFNULL function.
+
+DROP PROCEDURE IF EXISTS order_by_product4
+DELIMITER $$
+CREATE PROCEDURE order_by_product4(p_product_id INT)
+BEGIN
+	SELECT * 
+	FROM customer_orders 
+	WHERE product_id = IFNULL(p_product_id, 1001);
+END $$
+DELIMITER ;
+
+CALL order_by_product4(1001);
+
+CALL order_by_product4(NULL);
+
+CALL order_by_product4(1006);
+
+SELECT *
+FROM customer_orders
+;
+
+
+
+# in this part od ocde, we are using OUTPUT parameter. the benfit od using output parameter is using that parameter in the session by calling it whenever we need it and use it. in below, the recalling process of output parameter is indicating as well. This output parameter can be used for the calculation or in naother stored procedure.
+
+DROP PROCEDURE IF EXISTS sum_of_order;
+DELIMITER $$
+CREATE PROCEDURE sum_of_order(p_product_id INT, OUT sum_of_total DECIMAL(9,2))
+BEGIN
+	SELECT SUM(order_total)
+    INTO sum_of_total
+    FROM customer_orders
+    WHERE product_id = p_product_id;
+END $$
+DELIMITER ;
+
+CALL sum_of_order(1001);
+
+
+set @sum_of_total = 0;
+call bakery.sum_of_order(1001, @sum_of_total);
+select @sum_of_total;
+
+SELECT ROUND(@sum_of_total/SUM(order_total) *100,2) AS percentage_of_order
+FROM customer_orders;
+
+# In this section, Seesion and local variable is showing. the output paramter as an argument will be considered as a session variable and it can be used even out of code block, but the local varaibles should be declared in the begining of the code and just can be used in the block.
+
+DROP PROCEDURE IF EXISTS percentage_of_orders
+DELIMITER $$
+CREATE PROCEDURE percentage_of_orders(p_product_id INT, OUT sum_total DECIMAL(9,2))
+BEGIN
+	DECLARE all_total DECIMAL (9,2) DEFAULT 0;
+    DECLARE percentage_total DECIMAL (9,2);
+    
+	SELECT SUM(order_total)
+    INTO sum_total
+    FROM customer_orders
+    WHERE product_id = p_product_id;
+    
+    SELECT SUM(order_total)
+    INTO all_total
+    FROM customer_orders;
+    
+    SET percentage_total = (sum_total/all_total) * 100;
+    
+    SELECT sum_total;
+    SELECT all_total;
+    SELECT percentage_total;
+    
+END $$
+
+DELIMITER ;
+
+
+set @sum_total = 0;
+call bakery.percentage_of_orders(1001, @sum_total);
+
+-- Seesion variable
+SELECT @sum_total;
+-- Local variables
+SELECT @ all_total;
+SELECT @percentage_total;
+    
+    
