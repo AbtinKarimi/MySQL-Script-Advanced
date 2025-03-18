@@ -1,0 +1,145 @@
+SELECT * FROM bakery.client;
+# CTE 
+
+SELECT * 
+FROM customer_orders
+;
+
+SELECT product_id, SUM(order_total), SUM(tip), COUNT(tip)
+FROM customer_orders
+WHERE tip != 0
+GROUP BY product_id
+;
+
+WITH CTE_EXAMPLE1 AS
+(SELECT product_id, SUM(order_total), SUM(tip), COUNT(tip)
+FROM customer_orders
+WHERE tip != 0
+GROUP BY product_id)
+SELECT *
+FROM CTE_EXAMPLE1
+WHERE `SUM(tip)` > 3
+;
+
+WITH CTE_EXAMPLE1(product_id, sum_order_total, sum_tip, count_tip) AS
+(SELECT product_id, SUM(order_total), SUM(tip), COUNt(tip)
+FROM customer_orders
+WHERE tip != 0
+GROUP BY product_id)
+SELECT *
+FROM CTE_EXAMPLE1
+WHERE sum_tip > 3
+;
+
+WITH CTE_EXAMPLE1(product_id, sum_order_total, sum_tip, count_tip) AS
+(SELECT product_id, SUM(order_total), SUM(tip), COUNt(tip)
+FROM customer_orders
+WHERE tip != 0
+GROUP BY product_id)
+SELECT product_id, ROUND(sum_tip/count_tip,2)
+FROM CTE_EXAMPLE1
+;
+
+SELECT product_id, ROUND(sum_tip/count_tip,2)
+FROM
+(
+SELECT product_id, SUM(order_total) AS sum_order_total, SUM(tip) AS sum_tip, COUNT(tip) AS count_tip
+FROM customer_orders
+WHERE tip != 0
+GROUP BY product_id
+) AS CTE_EXAMPLE1_SUBQUERY
+;
+
+
+SELECT product_id, ROUND(`SUM(tip)`/`COUNT(tip)`,2)
+FROM
+(
+SELECT product_id, SUM(order_total), SUM(tip), COUNT(tip) 
+FROM customer_orders
+WHERE tip != 0
+GROUP BY product_id
+) AS CTE_EXAMPLE1_SUBQUERY
+;
+
+WITH CTE_EXAMPLE1(product_id, sum_order_total, sum_tip, count_tip) AS
+(SELECT product_id, SUM(order_total), SUM(tip), COUNT(tip)
+FROM customer_orders
+WHERE tip != 0
+GROUP BY product_id),
+CTE_EXAMPLE2 AS
+(SELECT product_id, SUM(order_total), SUM(tip), COUNT(tip)
+FROM customer_orders
+GROUP BY product_id)
+
+SELECT *
+FROM CTE_EXAMPLE1 cte1
+JOIN CTE_EXAMPLE2 cte2
+ON cte1.product_id=cte2.product_id
+;
+
+# CTE Recursion
+
+SELECT *
+FROM employees
+;
+
+# This is an example of using RECURSIVE in CTE
+
+WITH RECURSIVE CTE_EXAMPLE AS
+(SELECT 1 AS X 
+
+UNION ALL
+
+SELECT X + 1
+FROM CTE_EXAMPLE 
+WHERE X < 10
+)
+SELECT X
+FROM CTE_EXAMPLE
+;
+
+
+SELECT *
+FROM employees
+;
+
+WITH RECURSIVE company_hierarchy AS
+(SELECT employee_id, first_name, last_name, boss_id, 
+0 AS hierarchy_level
+FROM employees e
+WHERE boss_id IS NULL
+
+UNION ALL
+
+SELECT e.employee_id, e.first_name, e.last_name, e.boss_id,
+hierarchy_level + 1 
+FROM employees e, company_hierarchy ch
+WHERE e.boss_id = ch.employee_id
+)
+
+SELECT ch.first_name Employee_first_name, ch.last_name Employee_last_name, e.first_name Boss_first_name, e.last_name Boss_last_name, hierarchy_level
+FROM company_hierarchy ch
+JOIN employees e
+ON ch.boss_id = e.employee_id
+;
+
+WITH EXAMPLE3 AS
+(SELECT *, 
+ROW_NUMBER() OVER(PARTITION BY department ORDER BY salary) AS row_num
+FROM employees)
+SELECT *
+FROM EXAMPLE3
+WHERE row_num>2
+;
+
+CREATE TEMPORARY TABLE temp_example3
+(
+SELECT *, 
+ROW_NUMBER() OVER(PARTITION BY department ORDER BY salary) AS row_num
+FROM employees
+);
+
+
+SELECT *
+FROM temp_example3;
+
